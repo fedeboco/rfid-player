@@ -2,7 +2,6 @@
 #include "SoftwareSerial.h"
 
 Player::Player(int rx, int tx) : mySoftwareSerial{SoftwareSerial(rx,tx)}, timer{millis()} {
-    
 }
 
 void Player::start() {
