@@ -1,7 +1,14 @@
 #include "player.h"
 #include "SoftwareSerial.h"
 
-Player::Player(int rx, int tx) : mySoftwareSerial{SoftwareSerial(rx,tx)}, timer{millis()} {
+Player::Player(int rx, int tx, int folders) : 
+                mySoftwareSerial{SoftwareSerial(rx,tx)}, 
+                timer{millis()},
+                folders{folders} {
+}
+
+int Player::getFolders() {
+    return folders;
 }
 
 void Player::start() {
@@ -11,33 +18,50 @@ void Player::start() {
     Serial.println(F("Initializing DFPlayer ... (May take 3~5 seconds)"));
 
     // el segundo false fuerza un reset que popea el DAC y el parlante
-    while (!myDFPlayer.begin(mySoftwareSerial, true, false)) {  //Use softwareSerial to communicate with mp3.
+    while (!myDFPlayer.begin(mySoftwareSerial, true, true)) {  //Use softwareSerial to communicate with mp3.
         delay(1000);
         Serial.println(F("Unable to begin:"));
         Serial.println(F("1.Please recheck the connection!"));
         Serial.println(F("2.Please insert the SD card!"));
     }
-    Serial.println(F("DFPlayer Mini online."));
-
-    myDFPlayer.volume(5);  //Set volume value. From 0 to 30
-    myDFPlayer.play(1);  //Play the first mp3
+    myDFPlayer.setTimeOut(2000);
+    myDFPlayer.enableLoopAll();
+    myDFPlayer.EQ(DFPLAYER_EQ_NORMAL);
+    myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
+    myDFPlayer.volume(30);  //Set volume value. From 0 to 30
+    //myDFPlayer.play(1);  //Play the first mp3
 }
 
-void Player::processPlayer() {
-    if (millis() - timer > 150) {
-        myDFPlayer.volume(100);
-    }
+int Player::numberOfFolders() {
+    return myDFPlayer.readFolderCounts();
+}
 
-    if (millis() - timer > 3000) {
-        timer = millis();
-        //myDFPlayer.next();  //Play next mp3 every 3 second.
+void Player::MP3Folder(int fileNumber) {
+    myDFPlayer.playMp3Folder(fileNumber);
+    delay(1000);
+}
+
+void Player::translateCard(String card){
+    if (card.substring(1) == "0B F6 91 75")
+        cardType = NEXT;
+}
+
+void Player::processPlayer(String card, bool updatedCard) {
+    if (updatedCard) {
+        Serial.println(F("CARD READ <----------"));
+        translateCard(card);
+
+        if (cardType == NEXT)
+            myDFPlayer.next();
+
         if (myDFPlayer.available()) {
-        handleDFState(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
+            handleDFState(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
         }
     }
 }
 
 void Player::handleDFState(uint8_t type, int value) {
+    Serial.println(type);
     switch (type) {
         case TimeOut:
         Serial.println(F("Time Out!"));

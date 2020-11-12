@@ -8,8 +8,19 @@ void Card::init() {
     cardReader.PCD_Init();   // Initiate cardReader
 }
 
+String Card::getCard(){
+    return card;
+}
+
+bool Card::isNewCard(){
+    bool aux = newCard;
+    newCard = false;
+    return aux;
+}
+
 void Card::processCard() {
   // Look for new cards
+  newCard = false;
   if ( ! cardReader.PICC_IsNewCardPresent()) 
   {
     return;
@@ -19,6 +30,7 @@ void Card::processCard() {
   {
     return;
   }
+  newCard = true;
   //Show UID on serial monitor
   Serial.print("UID tag :");
   String content= "";
@@ -37,11 +49,8 @@ void Card::processCard() {
   {
     Serial.println("Authorized access");
     Serial.println();
-    delay(3000);
-  }
- 
- else   {
+  } else {
     Serial.println(" Access denied");
-    delay(3000);
   }
+  card = content;
 }   
