@@ -19,6 +19,7 @@ class Player {
     unsigned long timer;
     cardT cardType;
     int folders;
+    String * identifiers;
 
     public:
     void handleDFState(uint8_t, int);
@@ -29,6 +30,7 @@ class Player {
     int numberOfFolders();
     void MP3Folder(int);
     int getFolders();
+    void loadIdentifiers(String[]);
 };
 
 

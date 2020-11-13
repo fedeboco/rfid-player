@@ -43,14 +43,6 @@ void Card::processCard() {
      content.concat(String(cardReader.uid.uidByte[i], HEX));
   }
   Serial.println();
-  Serial.print("Message : ");
   content.toUpperCase();
-  if (content.substring(1) == "BD 31 15 2B") //change here the UID of the card/cards that you want to give access
-  {
-    Serial.println("Authorized access");
-    Serial.println();
-  } else {
-    Serial.println(" Access denied");
-  }
   card = content;
 }   
