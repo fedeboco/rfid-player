@@ -36,7 +36,3 @@ String Config::readEEPROM(int pos) {
     id[ID_SIZE] = '\0';
     return String(id);
 }
-
-bool Config::configCards(int numFolders) {
-
-}

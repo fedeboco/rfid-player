@@ -41,21 +41,49 @@ void Player::MP3Folder(int fileNumber) {
     delay(1000);
 }
 
-void Player::translateCard(String card){
-    if (card.substring(1) == "0B F6 91 75")
+void Player::translateCard(int index){
+    if (index == folders + 1) {
+        cardType = PLAY;
+    } else if (index == folders + 2) {
         cardType = NEXT;
+    } else if (index <= folders) {
+        cardType = FOLDER;
+        folderPlaying = index;
+    } else {
+        cardType = INVALID;
+    }
 }
 
 void Player::processPlayer(String card, bool updatedCard) {
     if (updatedCard) {
         Serial.println(F("CARD READ <----------"));
-        translateCard(card);
+        //translateCard(card);
 
-        if (cardType == NEXT)
+        Serial.print("type: ");
+        Serial.println(cardType);
+
+        if (cardType == NEXT) {
             myDFPlayer.next();
+            playing = true;
+        } else if (cardType == PLAY) {
+            if (playing == true)
+                myDFPlayer.pause();
+            else
+                myDFPlayer.start();
+            playing = !playing;
+        } else if (cardType == FOLDER) {
+            myDFPlayer.loopFolder(folderPlaying);
+        } else {
+            Serial.println("Invalid card.");
+        }
+            
 
         if (myDFPlayer.available()) {
             handleDFState(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
+            //playing = 
+            delay(2000);
+            Serial.print("state: ");
+            Serial.println(myDFPlayer.readState()); 
         }
     }
 }

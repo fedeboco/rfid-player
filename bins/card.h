@@ -12,7 +12,7 @@ class Card {
 
     public:
     Card(int, int);
-    void processCard();
+    bool processCard();
     void init();
     String getCard();
     bool isNewCard();

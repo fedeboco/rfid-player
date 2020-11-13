@@ -8,20 +8,22 @@ CardSystem::CardSystem() :
 }
 
 void CardSystem::updateSystem() {
-    card.processCard();
+    bool newCard = card.processCard();
+    if (newCard)
+        updateCardType(findCard(card.getCard()));
     player.processPlayer(card.getCard(), card.isNewCard());
-    card.isNewCard() ? delay(2000) : delay(100);
+    newCard ? delay(2000) : delay(100);
 }
 
 void CardSystem::saveCardsToEEPROM(int pendingCards) {
     Serial.println(pendingCards);
-    config.writeFoldersEEPROM(pendingCards - 2); //number of folders
+    config.writeFoldersEEPROM(pendingCards - ACTIONS); //number of folders
     for (int i = 0; pendingCards > 0; i++, pendingCards--) {
 
-        if (pendingCards == 2) {
-            player.MP3Folder(11);
-        } else if (pendingCards == 1) {
-            player.MP3Folder(12);
+        if (pendingCards == ACTIONS) {
+            player.MP3Folder(MAX_CARDS + 1);
+        } else if (pendingCards == ACTIONS - 1) {
+            player.MP3Folder(MAX_CARDS + 2);
         } else {
             player.MP3Folder(i + 1);
         }
@@ -36,7 +38,28 @@ void CardSystem::saveCardsToEEPROM(int pendingCards) {
     }
 }
 
-void CardSystem::loadCardsFromEEPROM(int cardsNumber) {
+// returns index if found, -1 otherwise
+int CardSystem::findCard(String card) {
+    int i = 1;
+    String candidate;
+
+    while (i <= player.getFolders() + ACTIONS) {
+        Serial.print(card);
+        Serial.print("|");
+        Serial.print(config.readEEPROM(i));
+        Serial.println("|");
+        if (config.readEEPROM(i) == card.substring(1))
+            return i;
+        i++;
+    }
+    return -1;
+}
+
+void CardSystem::updateCardType(int index) {
+    player.translateCard(index);
+}
+
+void CardSystem::printCardsFromEEPROM(int cardsNumber) {
     Serial.println(cardsNumber);
 
     for (int i = 0; i < cardsNumber; i++) {
@@ -53,7 +76,7 @@ void CardSystem::initCardConfig() {
         delay(1000);
     }
 
-    pendingCards++; // +2 (play and next) -1 (MP3 folder)
+    pendingCards + ACTIONS - 1; // +2 (play and next) -1 (MP3 folder)
     saveCardsToEEPROM(pendingCards);
 }
 
@@ -66,5 +89,5 @@ void CardSystem::init() {
     } else {
         player.start();
     } 
-    loadCardsFromEEPROM(player.getFolders() + 2);
+    //loadCardsFromEEPROM(player.getFolders() + ACTIONS);
 }

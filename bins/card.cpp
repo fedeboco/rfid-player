@@ -18,17 +18,17 @@ bool Card::isNewCard(){
     return aux;
 }
 
-void Card::processCard() {
+bool Card::processCard() {
   // Look for new cards
   newCard = false;
   if ( ! cardReader.PICC_IsNewCardPresent()) 
   {
-    return;
+    return false;
   }
   // Select one of the cards
   if ( ! cardReader.PICC_ReadCardSerial()) 
   {
-    return;
+    return false;
   }
   newCard = true;
   //Show UID on serial monitor
@@ -45,4 +45,5 @@ void Card::processCard() {
   Serial.println();
   content.toUpperCase();
   card = content;
+  return true;
 }   

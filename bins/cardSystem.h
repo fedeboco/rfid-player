@@ -12,6 +12,9 @@
 #define TX_DF_PIN 6
 #define BUTTON_PIN 4
 
+#define ACTIONS 2 // play, next
+#define MAX_CARDS 10
+
 class CardSystem {
     private:
     Card card;
@@ -25,6 +28,9 @@ class CardSystem {
     void saveCardsToEEPROM(int);
     void loadCardsFromEEPROM(int);
     void initCardConfig();
+    int findCard(String);
+    void updateCardType(int) ;
+    void printCardsFromEEPROM(int);
 };
 
 #endif

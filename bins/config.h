@@ -14,7 +14,6 @@ class Config {
     bool readButton();
     void writeEEPROM(String, int);
     String readEEPROM(int);
-    bool configCards(int);
     void writeFoldersEEPROM(int);
     int readFoldersEEPROM();
 };

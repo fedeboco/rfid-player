@@ -7,9 +7,8 @@
 typedef enum{
     PLAY,
     NEXT,
-    PREVIOUS,
-    VOLUP,
-    VOLDOWN
+    FOLDER,
+    INVALID
 } cardT;
 
 class Player {
@@ -20,13 +19,15 @@ class Player {
     cardT cardType;
     int folders;
     String * identifiers;
+    bool playing = false;
+    int folderPlaying = 0;
 
     public:
     void handleDFState(uint8_t, int);
     void processPlayer(String, bool);
     void start();
     Player(int, int, int);
-    void translateCard(String);
+    void translateCard(int);
     int numberOfFolders();
     void MP3Folder(int);
     int getFolders();
