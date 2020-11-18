@@ -4,8 +4,8 @@ Card::Card(int ssPin, int rstPin) : cardReader{MFRC522(ssPin, rstPin)} {
 }
 
 void Card::init() {
-    SPI.begin();      // Initiate  SPI bus
-    cardReader.PCD_Init();   // Initiate cardReader
+    SPI.begin();
+    cardReader.PCD_Init();
 }
 
 String Card::getCard(){
@@ -18,32 +18,30 @@ bool Card::isNewCard(){
     return aux;
 }
 
-bool Card::processCard() {
-  // Look for new cards
-  newCard = false;
-  if ( ! cardReader.PICC_IsNewCardPresent()) 
-  {
-    return false;
-  }
-  // Select one of the cards
-  if ( ! cardReader.PICC_ReadCardSerial()) 
-  {
-    return false;
-  }
-  newCard = true;
-  //Show UID on serial monitor
-  Serial.print("UID tag :");
+String Card::getIDfromReader() {
   String content= "";
   byte letter;
-  for (byte i = 0; i < cardReader.uid.size; i++) 
-  {
-     Serial.print(cardReader.uid.uidByte[i] < 0x10 ? " 0" : " ");
-     Serial.print(cardReader.uid.uidByte[i], HEX);
-     content.concat(String(cardReader.uid.uidByte[i] < 0x10 ? " 0" : " "));
-     content.concat(String(cardReader.uid.uidByte[i], HEX));
+  for (byte i = 0; i < cardReader.uid.size; i++) {
+      content.concat(String(cardReader.uid.uidByte[i] < 0x10 ? " 0" : " "));
+      content.concat(String(cardReader.uid.uidByte[i], HEX));
   }
-  Serial.println();
   content.toUpperCase();
-  card = content;
+  return content;
+}
+
+bool Card::updatesAvailable() {
+  return cardReader.PICC_IsNewCardPresent() &&
+         cardReader.PICC_ReadCardSerial();
+}
+
+bool Card::processCard() {
+  if ((newCard = updatesAvailable()) == false)
+    return false;
+
+  card = getIDfromReader();
+
+  Serial.print("ID:");
+  Serial.println(card);
+  
   return true;
 }   

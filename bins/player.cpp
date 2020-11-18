@@ -12,24 +12,29 @@ int Player::getFolders() {
 }
 
 void Player::start() {
-    mySoftwareSerial.begin(9600);
+    mySoftwareSerial.begin(BAUD_RATE);
     Serial.println();
-    Serial.println(F("DFRobot DFPlayer Mini Demo"));
-    Serial.println(F("Initializing DFPlayer ... (May take 3~5 seconds)"));
+    Serial.println(F(DFSTARTUP));
 
-    // el segundo false fuerza un reset que popea el DAC y el parlante
-    while (!myDFPlayer.begin(mySoftwareSerial, true, true)) {  //Use softwareSerial to communicate with mp3.
-        delay(1000);
-        Serial.println(F("Unable to begin:"));
-        Serial.println(F("1.Please recheck the connection!"));
-        Serial.println(F("2.Please insert the SD card!"));
+    // second boolean forces restart and pops speaker
+    while (!myDFPlayer.begin(mySoftwareSerial, true, true)) {
+        delay(DFRECONNECT_DELAY);
+        Serial.println(F(DF_NOT_DETECTED));
     }
-    myDFPlayer.setTimeOut(2000);
-    myDFPlayer.enableLoopAll();
+    Serial.println(F(DF_CONNECTED));
+    currentFolderTracks = -1;
+    while (currentFolderTracks == -1) {
+        delay(DFRECONNECT_DELAY);
+        currentFolderTracks = myDFPlayer.readFileCountsInFolder(1);
+    };
+    setDFOptions();
+}
+
+void Player::setDFOptions() {
+    myDFPlayer.setTimeOut(DFTIMEOUT);
     myDFPlayer.EQ(DFPLAYER_EQ_NORMAL);
     myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
-    myDFPlayer.volume(30);  //Set volume value. From 0 to 30
-    //myDFPlayer.play(1);  //Play the first mp3
+    myDFPlayer.volume(VOLUME); //0 to 30
 }
 
 int Player::numberOfFolders() {
@@ -38,7 +43,7 @@ int Player::numberOfFolders() {
 
 void Player::MP3Folder(int fileNumber) {
     myDFPlayer.playMp3Folder(fileNumber);
-    delay(1000);
+    delay(DFRECONNECT_DELAY);
 }
 
 void Player::translateCard(int index){
@@ -54,40 +59,57 @@ void Player::translateCard(int index){
     }
 }
 
+int Player::countFolderFiles(int index) {
+    return myDFPlayer.readFileCountsInFolder(index);
+}
+
+// asumes device turns on in folder 1
+void Player::next() {
+    Serial.print("Tracks:");
+    Serial.println(currentFolderTracks);
+    if (currentTrack == currentFolderTracks) {
+        currentTrack = 1;
+        myDFPlayer.loopFolder(folderPlaying);
+    } else {
+        currentTrack++;
+        myDFPlayer.next();
+    }
+    playing = true;
+}
+
+void Player::play() {
+    if (playing == true)
+        myDFPlayer.pause();
+    else
+        myDFPlayer.start();
+    playing = !playing;
+}
+
+void Player::folder() {
+    currentTrack = 1;
+    currentFolderTracks = countFolderFiles(folderPlaying);
+    myDFPlayer.loopFolder(folderPlaying);
+}
+
 void Player::processPlayer(String card, bool updatedCard) {
     if (updatedCard) {
-        Serial.println(F("CARD READ <----------"));
-        //translateCard(card);
-
-        Serial.print("type: ");
-        Serial.println(cardType);
-
         if (cardType == NEXT) {
-            myDFPlayer.next();
-            playing = true;
+            next();
         } else if (cardType == PLAY) {
-            if (playing == true)
-                myDFPlayer.pause();
-            else
-                myDFPlayer.start();
-            playing = !playing;
+            play();
         } else if (cardType == FOLDER) {
-            myDFPlayer.loopFolder(folderPlaying);
+            folder();
         } else {
-            Serial.println("Invalid card.");
+            Serial.println(INVALID_CARD);
         }
-            
 
-        if (myDFPlayer.available()) {
-            handleDFState(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
-            //playing = 
-            delay(2000);
-            Serial.print("state: ");
-            Serial.println(myDFPlayer.readState()); 
-        }
+        if (myDFPlayer.available())
+            handleDFState(myDFPlayer.readType(), myDFPlayer.read());
     }
 }
 
+ // Print the detail message from DFPlayer to handle 
+ // different errors and states.
 void Player::handleDFState(uint8_t type, int value) {
     Serial.println(type);
     switch (type) {

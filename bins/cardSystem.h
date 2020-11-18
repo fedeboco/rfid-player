@@ -14,6 +14,9 @@
 
 #define ACTIONS 2 // play, next
 #define MAX_CARDS 10
+#define CARD_READ_DELAY 2000 //ms
+#define NO_NEW_CARD_DELAY 100 //ms
+#define CARD_CHECK_EEPROM_DELAY 1000 //ms
 
 class CardSystem {
     private:

@@ -16,6 +16,8 @@ class Card {
     void init();
     String getCard();
     bool isNewCard();
+    String getIDfromReader();
+    bool updatesAvailable();
 
 };
 

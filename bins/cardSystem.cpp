@@ -12,7 +12,7 @@ void CardSystem::updateSystem() {
     if (newCard)
         updateCardType(findCard(card.getCard()));
     player.processPlayer(card.getCard(), card.isNewCard());
-    newCard ? delay(2000) : delay(100);
+    newCard ? delay(CARD_READ_DELAY) : delay(NO_NEW_CARD_DELAY);
 }
 
 void CardSystem::saveCardsToEEPROM(int pendingCards) {
@@ -30,7 +30,7 @@ void CardSystem::saveCardsToEEPROM(int pendingCards) {
         
         while(!card.isNewCard()){
             card.processCard();
-            delay(1000);
+            delay(CARD_CHECK_EEPROM_DELAY);
         }
 
         //first bytes for general config
@@ -44,10 +44,6 @@ int CardSystem::findCard(String card) {
     String candidate;
 
     while (i <= player.getFolders() + ACTIONS) {
-        Serial.print(card);
-        Serial.print("|");
-        Serial.print(config.readEEPROM(i));
-        Serial.println("|");
         if (config.readEEPROM(i) == card.substring(1))
             return i;
         i++;
@@ -69,8 +65,9 @@ void CardSystem::printCardsFromEEPROM(int cardsNumber) {
 
 void CardSystem::initCardConfig() {
     int pendingCards = -1;
+
     player.start();
-    //while para darle tiempo a que actualice la cantidad de carpetas
+    // takes some time to update folders
     while (pendingCards == -1){
         pendingCards = player.numberOfFolders();
         delay(1000);
@@ -89,5 +86,4 @@ void CardSystem::init() {
     } else {
         player.start();
     } 
-    //loadCardsFromEEPROM(player.getFolders() + ACTIONS);
 }
