@@ -32,6 +32,7 @@ class CardSystem {
     void loadCardsFromEEPROM(int);
     void initCardConfig();
     int findCard(String);
+    int findCard(String, int, int);
     void updateCardType(int) ;
     void printCardsFromEEPROM(int);
 };

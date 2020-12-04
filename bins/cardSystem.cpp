@@ -15,6 +15,7 @@ void CardSystem::updateSystem() {
     newCard ? delay(CARD_READ_DELAY) : delay(NO_NEW_CARD_DELAY);
 }
 
+//first bytes for general config
 void CardSystem::saveCardsToEEPROM(int pendingCards) {
     Serial.println(pendingCards);
     config.writeFoldersEEPROM(pendingCards - ACTIONS); //number of folders
@@ -33,8 +34,13 @@ void CardSystem::saveCardsToEEPROM(int pendingCards) {
             delay(CARD_CHECK_EEPROM_DELAY);
         }
 
-        //first bytes for general config
-        config.writeEEPROM(card.getCard(), i + 1);
+        // ignores if already exists in current save
+        if ( i == 0 || (findCard(card.getCard(), 1, i) == -1) ) {
+            config.writeEEPROM(card.getCard(), i + 1);
+        } else {
+            i--;
+            pendingCards++;
+        }
     }
 }
 
@@ -44,6 +50,18 @@ int CardSystem::findCard(String card) {
     String candidate;
 
     while (i <= player.getFolders() + ACTIONS) {
+        if (config.readEEPROM(i) == card.substring(1))
+            return i;
+        i++;
+    }
+    return -1;
+}
+
+int CardSystem::findCard(String card, int start, int end) {
+    int i = start;
+    String candidate;
+
+    while (i <= end) {
         if (config.readEEPROM(i) == card.substring(1))
             return i;
         i++;
